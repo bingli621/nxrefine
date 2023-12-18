@@ -96,6 +96,11 @@ class RefineLatticeDialog(NXDialog):
         self.parameters.add('chi', self.refine.chi, 'Chi (deg)', False)
         self.parameters.add('omega', self.refine.omega, 'Omega (deg)', False)
         self.parameters.add('theta', self.refine.theta, 'Theta (deg)', False)
+        self.parameters.add('xs', self.refine.xs, 'Sample x (mm)', False)
+        self.parameters.add('ys', self.refine.ys, 'Sample y (mm)', False)
+        self.parameters.add('zs', self.refine.zs, 'Sample z (mm)', False)
+        self.parameters.add('omat', self.refine.detector_orientation,
+                            'Detector Orientation')
         self.parameters.add('polar', self.reduce.polar_max,
                             'Max. Polar Angle (deg)', None, self.set_polar_max)
         self.parameters.add('polar_tolerance', self.refine.polar_tolerance,
@@ -157,6 +162,10 @@ class RefineLatticeDialog(NXDialog):
         self.parameters['chi'].value = self.refine.chi
         self.parameters['omega'].value = self.refine.omega
         self.parameters['theta'].value = self.refine.theta
+        self.parameters['xs'].value = self.refine.xs
+        self.parameters['ys'].value = self.refine.ys
+        self.parameters['zs'].value = self.refine.zs
+        self.parameters['omat'].value = self.refine.detector_orientation
         self.parameters['polar_tolerance'].value = self.refine.polar_tolerance
         self.parameters['peak_tolerance'].value = self.refine.peak_tolerance
         self.parameters['hkl_tolerance'].value = self.refine.hkl_tolerance
@@ -181,6 +190,9 @@ class RefineLatticeDialog(NXDialog):
         self.refine.phi, self.refine.phi_step = self.get_phi()
         self.refine.chi, self.refine.omega, self.refine.theta = (
             self.get_angles())
+        self.refine.xs, self.refine.ys, self.refine.zs = (
+            self.get_sample_shift())
+        self.refine.detector_orientation = self.get_omat()
         self.refine.polar_max = self.get_polar_max()
         self.refine.polar_tolerance = self.get_polar_tolerance()
         self.refine.peak_tolerance = self.get_peak_tolerance()
@@ -398,6 +410,14 @@ class RefineLatticeDialog(NXDialog):
                 self.parameters['omega'].value,
                 self.parameters['theta'].value)
 
+    def get_sample_shift(self):
+        return (self.parameters['xs'].value,
+                self.parameters['ys'].value,
+                self.parameters['zs'].value)
+
+    def get_omat(self):
+        return self.parameters['omat'].value
+
     def get_polar_max(self):
         return self.parameters['polar'].value
 
@@ -538,6 +558,8 @@ class RefineLatticeDialog(NXDialog):
         if self.peaks_box in self.mainwindow.dialogs:
             self.update_table()
             return
+        else:
+            self.transfer_parameters()
         self.peaks_box = NXDialog(self)
         self.peaks_box.setMinimumWidth(600)
         self.peaks_box.setMinimumHeight(600)
@@ -588,6 +610,7 @@ class RefineLatticeDialog(NXDialog):
         self.peaks_box.adjustSize()
         self.peaks_box.show()
         self.peakview = None
+        self.report_score()
 
     def update_table(self):
         if self.peaks_box not in self.mainwindow.dialogs:
