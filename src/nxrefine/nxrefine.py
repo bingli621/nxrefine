@@ -1605,10 +1605,25 @@ class NXRefine:
         float
             [description]
         """
+        
         H, K, L = self.hkl(i)
         Q = np.matrix((H, K, L)).T
         Q0 = np.matrix((np.rint(H), np.rint(K), np.rint(L))).T
-        return norm(self.Bmat * (Q - Q0))
+        TWIN = True # Flag for twins
+        if TWIN: # does not work if more than one twin
+            # update lattice parameters?
+            a = self.a
+            c = self.c
+            beta = self.beta / 180.0 * np.pi
+            p_mat = np.matrix(((-1, 0, 2 * a / c * np.cos(beta)),
+                           (0, -1, 0),
+                           (0, 0, 1)))
+            Q_twin = p_mat @ Q
+            Q0_twin = np.rint(Q_twin)
+            return min(norm(self.Bmat * (Q_twin - Q0_twin)),
+                       norm(self.Bmat * (Q - Q0)))
+        else: # No twins
+            return norm(self.Bmat * (Q - Q0))
 
     def angle_diffs(self):
         """Return the set of polar angle differences for all the peaks"""
